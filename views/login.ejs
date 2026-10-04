@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Shiva Motors</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand-dark: #0f172a; --brand-accent: #ea580c; --surface: #ffffff; --bg-base: #f8fafc; --border-light: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-base); display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-card { background: var(--surface); padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-light); }
+        .brand-logo { font-size: 28px; font-weight: 800; color: var(--brand-dark); text-decoration: none; display: block; margin-bottom: 8px; }
+        .brand-logo span { color: var(--brand-accent); }
+        .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 32px; }
+        .btn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px; background: white; border: 1px solid var(--border-light); border-radius: 10px; font-size: 1rem; font-weight: 600; color: var(--brand-dark); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .btn-google:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .btn-google img { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <a href="/" class="brand-logo" style="display: flex; align-items: center; gap: 12px; line-height: 1.1; text-decoration: none;">
+                <img src="/public/images/logo.jpeg" alt="SM Logo" style="height: 46px; width: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--brand-accent); background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div>Shiva<span>Motors</span></div>
+            </a>
+        <p class="subtitle">Secure access to your account</p>
+        
+        <button id="googleLoginBtn" class="btn-google">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google">
+            Continue with Google
+        </button>
+        <p style="margin-top: 20px; font-size: 0.85rem;"><a href="/" style="color: var(--brand-accent);">Return to Homepage</a></p>
+    </div>
+
+    <!-- 🔥 FIREBASE SCRIPT 🔥 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+        // *** PASTE YOUR FIREBASE KEYS HERE ***
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFgXHdimiKDSOZ8FtUvgBGzqLOmeVcY6o",
+            authDomain: "shiva-motors-33ef4.firebaseapp.com",
+            projectId: "shiva-motors-33ef4",
+            storageBucket: "shiva-motors-33ef4.firebasestorage.app",
+            messagingSenderId: "1001689773951",
+            appId: "1:1001689773951:web:1f0ddad6f3bb6bf6894c4a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, provider);
+                const redirectUrl = sessionStorage.getItem('loginRedirect') || '/';
+                sessionStorage.removeItem('loginRedirect');
+                window.location.href = redirectUrl;
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("Login failed. Please try again.");
+            }
+        });
+    </script>
+</body>
+</html>
