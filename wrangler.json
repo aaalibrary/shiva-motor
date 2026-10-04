@@ -1,0 +1,8 @@
+{
+    "main":  "src/index.ts",
+    "name":  "shiva-motor",
+    "compatibility_date":  "2026-10-04",
+    "assets":  {
+                   "directory":  "public"
+               }
+}
