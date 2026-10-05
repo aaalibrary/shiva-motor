@@ -12,6 +12,7 @@ app.set('views', path.join(__dirname, '../views'));
 console.log('SHIVA MOTORS SERVER BOOTING...');
 const mongoURI = process.env.MONGO_URI || '';
 mongoose.connect(mongoURI).then(() => console.log('MongoDB successfully connected!')).catch((err) => console.error('CRASH [MongoDB Connection Error]:', err));
-app.get('/', (req, res) => { res.render('home'); });
+app.get('/', (req, res) => { const currentType = req.query.type || 'Car'; res.render('home', { currentType }); });
 const PORT = process.env.PORT || 3000;
 app.listen(Number(PORT), '0.0.0.0', () => { console.log('Server running on port ' + PORT); });
+

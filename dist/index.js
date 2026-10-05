@@ -14,7 +14,8 @@ console.log("SHIVA MOTORS SERVER BOOTING...");
 var mongoURI = process.env.MONGO_URI || "";
 mongoose.connect(mongoURI).then(() => console.log("MongoDB successfully connected!")).catch((err) => console.error("CRASH [MongoDB Connection Error]:", err));
 app.get("/", (req, res) => {
-  res.render("home");
+  const currentType = req.query.type || "Car";
+  res.render("home", { currentType });
 });
 var PORT = process.env.PORT || 3e3;
 app.listen(Number(PORT), "0.0.0.0", () => {
