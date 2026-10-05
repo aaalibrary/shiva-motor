@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import { sequelize } from '../database';
+import { sequelize } from '../database.js';
 
 // Define the SQL Table for Vehicles
 export const Vehicle = sequelize.define('Vehicle', {
