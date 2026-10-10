@@ -116,7 +116,7 @@
             </div>
         </div>
 
-        <!-- Step 4: Price & OTP Verification -->
+        <!-- Step 4: Price & Fast2SMS OTP -->
         <div class="step" id="step-4">
             <div class="form-group">
                 <label>Expected Price (₹)</label>
@@ -128,14 +128,11 @@
                 
                 <div id="phoneStep">
                     <div class="form-group">
-                        <input type="tel" id="phoneNumber" placeholder="+91 99999 99999" value="+91">
-                        <small style="color: var(--text-muted); display: block; margin-top: 5px;">Include +91 country code</small>
+                        <input type="tel" id="phoneNumber" placeholder="99999 99999" maxlength="10">
+                        <small style="color: var(--text-muted); display: block; margin-top: 5px;">Enter your 10-digit number</small>
                     </div>
                     
-                    <!-- Firebase reCAPTCHA loads here -->
-                    <div id="recaptcha-container" style="margin-bottom: 15px;"></div>
-                    
-                    <button type="button" class="btn-next" id="btnSendOtp" style="width: 100%;" disabled>Solve Captcha to Send OTP</button>
+                    <button type="button" class="btn-next" id="btnSendOtp" style="width: 100%;">Send OTP via SMS</button>
                 </div>
 
                 <div id="otpStep" style="display: none;">
@@ -164,7 +161,6 @@
     </div>
 </div>
 
-<!-- Standard UI Script -->
 <script>
     function selectCategory(element, cat) {
         document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('selected'));
@@ -175,11 +171,6 @@
     function nextStep(current) {
         if(current === 1 && !document.getElementById('sellCategory').value) return alert("Select a category.");
         if(current === 2 && !document.getElementById('sellCondition').value) return alert("Select the condition.");
-        
-        if(current === 3) {
-            // Trigger recaptcha initialization when moving to the final step
-            if(window.initRecaptcha) window.initRecaptcha();
-        }
 
         document.getElementById(`step-${current}`).classList.remove('active');
         document.getElementById(`step-${current + 1}`).classList.add('active');
@@ -227,90 +218,56 @@
             status.style.color = "var(--text-muted)";
         }
     }
-</script>
 
-<!-- Firebase Phone Auth & Database Submission Script -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBFgXHdimiKDSOZ8FtUvgBGzqLOmeVcY6o",
-        authDomain: "shiva-motors-33ef4.firebaseapp.com",
-        projectId: "shiva-motors-33ef4",
-        storageBucket: "shiva-motors-33ef4.firebasestorage.app",
-        messagingSenderId: "1001689773951",
-        appId: "1:1001689773951:web:1f0ddad6f3bb6bf6894c4a"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // Bind initialization to window so the UI script can call it
-    window.initRecaptcha = function() {
-        if(!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'normal',
-                'callback': (response) => {
-                    const btn = document.getElementById('btnSendOtp');
-                    btn.disabled = false;
-                    btn.innerText = "Send OTP via SMS";
-                },
-                'expired-callback': () => {
-                    document.getElementById('btnSendOtp').disabled = true;
-                }
-            });
-            window.recaptchaVerifier.render();
-        }
-    }
-
+    // --- CUSTOM OTP LOGIC ---
     document.getElementById('btnSendOtp').addEventListener('click', () => {
         const phone = document.getElementById('phoneNumber').value;
         const price = document.getElementById('sellPrice').value;
         const btn = document.getElementById('btnSendOtp');
         
         if(!price || Number(price) <= 0) return alert("Enter your expected price first.");
+        if(phone.length < 10) return alert("Enter a valid 10-digit mobile number.");
         
-        btn.innerText = "Sending Code...";
+        btn.innerText = "Sending SMS...";
         btn.disabled = true;
 
-        signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
-            .then((confirmationResult) => {
-                window.confirmationResult = confirmationResult;
+        fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
                 document.getElementById('phoneStep').style.display = 'none';
                 document.getElementById('otpStep').style.display = 'block';
-            }).catch((error) => {
-                console.error(error);
-                alert("Error sending OTP. Ensure the number is valid and includes +91.");
-                window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
+            } else {
+                alert("Error sending SMS: " + (data.error || "Please try again."));
                 btn.innerText = "Send OTP via SMS";
                 btn.disabled = false;
-            });
-    });
-
-    document.getElementById('btnSubmitFinal').addEventListener('click', () => {
-        const code = document.getElementById('otpCode').value;
-        const btn = document.getElementById('btnSubmitFinal');
-        btn.innerText = "Verifying Identity...";
-        btn.disabled = true;
-
-        window.confirmationResult.confirm(code).then((result) => {
-            // OTP is valid! Send the vehicle data to our MongoDB Backend
-            submitToDatabase(result.user.phoneNumber);
-        }).catch((error) => {
-            alert("Invalid OTP code. Please check your SMS and try again.");
-            btn.innerText = "Verify & Submit Vehicle";
+            }
+        }).catch(err => {
+            alert("Network error. Please try again.");
+            btn.innerText = "Send OTP via SMS";
             btn.disabled = false;
         });
     });
 
-    function submitToDatabase(verifiedPhone) {
+    document.getElementById('btnSubmitFinal').addEventListener('click', () => {
+        const phone = document.getElementById('phoneNumber').value;
+        const otpCode = document.getElementById('otpCode').value;
+        const btn = document.getElementById('btnSubmitFinal');
+        
+        btn.innerText = "Verifying Code...";
+        btn.disabled = true;
+
         const data = {
             category: document.getElementById('sellCategory').value,
             condition: document.getElementById('sellCondition').value,
             details: document.getElementById('sellDetails').value,
             price: document.getElementById('sellPrice').value,
-            phone: verifiedPhone
+            phone: phone,
+            otp: otpCode
         };
 
         fetch('/api/sell-vehicle', {
@@ -319,10 +276,20 @@
             body: JSON.stringify(data)
         }).then(res => res.json())
           .then(response => {
-              document.getElementById('formContent').style.display = 'none';
-              document.getElementById('successScreen').style.display = 'block';
-          }).catch(err => alert("Error saving data to database."));
-    }
+              if (response.success) {
+                  document.getElementById('formContent').style.display = 'none';
+                  document.getElementById('successScreen').style.display = 'block';
+              } else {
+                  alert(response.error || "Invalid OTP code.");
+                  btn.innerText = "Verify & Submit Vehicle";
+                  btn.disabled = false;
+              }
+          }).catch(err => {
+              alert("Server error connecting to database.");
+              btn.innerText = "Verify & Submit Vehicle";
+              btn.disabled = false;
+          });
+    });
 </script>
 </body>
 </html>

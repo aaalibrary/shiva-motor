@@ -44,7 +44,7 @@ app.get('/sell', (req, res) => {
   res.render('sell'); 
 });
 
-// --- ADMIN DASHBOARD & DB LOGIC FOR VEHICLE SALES ---
+// --- FAST2SMS OTP & DATABASE SCHEMA ---
 const SellRequestSchema = new mongoose.Schema({
     category: String,
     condition: String,
@@ -56,38 +56,84 @@ const SellRequestSchema = new mongoose.Schema({
 });
 const SellRequest = mongoose.model('SellRequest', SellRequestSchema);
 
-// Endpoint hit by the sell.ejs form after successful OTP
-app.post('/api/sell-vehicle', async (req, res) => {
+const otpStore: Record<string, string> = {};
+
+app.post('/api/send-otp', async (req, res) => {
+    let { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: "Phone number is required." });
+    
+    phone = phone.replace("+91", "").trim(); 
+    
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[phone] = otp; 
+    
+    const API_KEY = process.env.FAST2SMS_KEY || "";
+    
     try {
-        const newReq = new SellRequest(req.body);
-        await newReq.save();
-        res.status(200).json({ success: true });
+        const response = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+            method: "POST",
+            headers: {
+                "authorization": API_KEY,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                route: "otp",
+                variables_values: otp,
+                numbers: phone 
+            })
+        });
+        const data: any = await response.json();
+        
+        if (data.return) {
+            res.json({ success: true });
+        } else {
+            res.status(500).json({ error: "SMS Gateway blocked the message." });
+        }
     } catch (err) {
-        res.status(500).json({ error: "DB Error" });
+         res.status(500).json({ error: "Failed to connect to SMS API." });
     }
 });
 
-// Private Admin URL to view submitted vehicles
+app.post('/api/sell-vehicle', async (req, res) => {
+    let { phone, otp, category, condition, details, price } = req.body;
+    phone = phone.replace("+91", "").trim();
+
+    if (otpStore[phone] !== otp) {
+        return res.status(400).json({ error: "Invalid or expired OTP code." });
+    }
+    
+    try {
+        const newReq = new SellRequest({ category, condition, details, price, phone });
+        await newReq.save();
+        
+        delete otpStore[phone]; 
+        
+        res.status(200).json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Database Error: Failed to save." });
+    }
+});
+
 app.get('/admin/requests', async (req, res) => {
     try {
         const requests = await SellRequest.find().sort({ createdAt: -1 });
         let html = `<div style="font-family: sans-serif; padding: 40px; background: #f8fafc; min-height: 100vh;">
-            <h2 style="color: #0f172a;">Admin Dashboard - Pending Sales</h2>
-            <table border="1" cellpadding="12" style="border-collapse: collapse; width: 100%; background: white;">
-                <tr style="background: #e2e8f0; text-align: left;">
+            <h2 style="color: #0f172a; margin-bottom: 20px;">Admin Dashboard - Pending Vehicle Sales</h2>
+            <table border="1" cellpadding="12" style="border-collapse: collapse; width: 100%; background: white; border-color: #cbd5e1;">
+                <tr style="background: #e2e8f0; text-align: left; color: #0f172a;">
                     <th>Date</th><th>Category</th><th>Condition</th><th>Expected Price</th><th>Verified Phone</th><th>Status</th>
                 </tr>`;
         requests.forEach(r => {
             html += `<tr>
                 <td>${r.createdAt.toLocaleDateString()}</td>
-                <td>${r.category}</td>
+                <td><b>${r.category}</b></td>
                 <td>${r.condition}</td>
-                <td>₹${r.price.toLocaleString('en-IN')}</td>
-                <td style="color: #16a34a; font-weight: bold;">${r.phone}</td>
+                <td>₹${Number(r.price).toLocaleString('en-IN')}</td>
+                <td style="color: #16a34a; font-weight: bold;">+91 ${r.phone}</td>
                 <td><span style="background: #fef08a; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${r.status}</span></td>
             </tr>`;
         });
-        html += `</table><br><a href="/" style="color: #ea580c; font-weight: bold;">&larr; Back to Home</a></div>`;
+        html += `</table><br><a href="/" style="color: #ea580c; font-weight: bold; text-decoration: none;">&larr; Back to Home</a></div>`;
         res.send(html);
     } catch (err) {
         res.status(500).send("Error loading admin dashboard");
