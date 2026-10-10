@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy a Vehicle | Shiva Motors</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand-dark: #0f172a; --brand-accent: #ea580c; --bg-base: #f8fafc; --surface: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border-light: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); display: flex; justify-content: center; padding: 40px 20px; }
+        
+        .form-container { background: var(--surface); max-width: 600px; width: 100%; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
+        h2 { text-align: center; color: var(--brand-dark); margin-bottom: 10px; }
+        .progress-bar { display: flex; gap: 10px; margin-bottom: 30px; }
+        .progress-step { flex: 1; height: 6px; background: var(--border-light); border-radius: 10px; transition: 0.3s; }
+        .progress-step.active { background: var(--brand-accent); }
+        
+        .step { display: none; animation: fadeIn 0.4s; }
+        .step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; }
+        select, input[type="range"] { width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 1rem; }
+        
+        .btn-row { display: flex; justify-content: space-between; margin-top: 30px; }
+        button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-next { background: var(--brand-accent); color: white; margin-left: auto; }
+        .btn-next:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-back { background: var(--border-light); color: var(--text-main); }
+        
+        /* Grid for Categories & Results */
+        .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .opt-card { border: 2px solid var(--border-light); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .opt-card.selected { border-color: var(--brand-accent); background: #fff7ed; color: var(--brand-accent); }
+        
+        /* Results Card */
+        .result-card { display: flex; gap: 15px; border: 1px solid var(--border-light); padding: 15px; border-radius: 12px; margin-bottom: 15px; align-items: center; }
+        .result-card img { width: 100px; height: 70px; object-fit: cover; border-radius: 8px; }
+        
+        @media (max-width: 600px) { .form-container { padding: 25px; } }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Find Your Next Vehicle</h2>
+    
+    <div class="progress-bar">
+        <div class="progress-step active" id="pb-1"></div>
+        <div class="progress-step" id="pb-2"></div>
+        <div class="progress-step" id="pb-3"></div>
+        <div class="progress-step" id="pb-4"></div>
+    </div>
+
+    <!-- Step 1: Preferences -->
+    <div class="step active" id="step-1">
+        <div class="form-group">
+            <label>Condition Preference</label>
+            <select id="buyCondition">
+                <option value="">Select condition...</option>
+                <option value="used">Pre-Owned (Used)</option>
+                <option value="new">Brand New</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Transmission Type</label>
+            <select id="buyTrans">
+                <option value="">Select transmission...</option>
+                <option value="manual">Manual</option>
+                <option value="automatic">Automatic</option>
+            </select>
+        </div>
+        <div class="btn-row"><button class="btn-next" onclick="nextStep(1)">Next Step</button></div>
+    </div>
+
+    <!-- Step 2: Category -->
+    <div class="step" id="step-2">
+        <label>Select Vehicle Category</label>
+        <div class="grid-options" id="categoryGrid">
+            <div class="opt-card" onclick="selectCategory(this, 'Car')">Car</div>
+            <div class="opt-card" onclick="selectCategory(this, 'Bike')">Bike</div>
+            <div class="opt-card" onclick="selectCategory(this, 'Tractor')">Tractor</div>
+            <div class="opt-card" onclick="selectCategory(this, 'JCB')">JCB</div>
+            <div class="opt-card" onclick="selectCategory(this, 'Commercial')">Commercial</div>
+        </div>
+        <input type="hidden" id="selectedCategory" value="">
+        <div class="btn-row">
+            <button class="btn-back" onclick="prevStep(2)">Back</button>
+            <button class="btn-next" onclick="nextStep(2)">Next Step</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Budget -->
+    <div class="step" id="step-3">
+        <label>Maximum Budget: ₹<span id="budgetValue">500,000</span></label>
+        <input type="range" id="buyBudget" min="50000" max="5000000" step="50000" value="500000" oninput="document.getElementById('budgetValue').innerText = Number(this.value).toLocaleString('en-IN')">
+        <div class="btn-row">
+            <button class="btn-back" onclick="prevStep(3)">Back</button>
+            <button class="btn-next" onclick="fetchResults()">Find Vehicles</button>
+        </div>
+    </div>
+
+    <!-- Step 4: Results -->
+    <div class="step" id="step-4">
+        <h3 style="margin-bottom: 20px; color: var(--brand-dark);">Matching Vehicles</h3>
+        <div id="resultsContainer">
+            <!-- Data will be populated here via JS -->
+        </div>
+        <div class="btn-row">
+            <a href="/" style="text-decoration: none;"><button class="btn-back">Go to Home</button></a>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentCat = '';
+
+    function selectCategory(element, cat) {
+        document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        document.getElementById('selectedCategory').value = cat;
+        currentCat = cat;
+    }
+
+    function nextStep(current) {
+        // Validation
+        if(current === 1 && (!document.getElementById('buyCondition').value || !document.getElementById('buyTrans').value)) return alert("Please fill all preferences.");
+        if(current === 2 && !document.getElementById('selectedCategory').value) return alert("Please select a category.");
+
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`step-${current + 1}`).classList.add('active');
+        document.getElementById(`pb-${current + 1}`).classList.add('active');
+    }
+
+    function prevStep(current) {
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`step-${current - 1}`).classList.add('active');
+        document.getElementById(`pb-${current}`).classList.remove('active');
+    }
+
+    function fetchResults() {
+        nextStep(3);
+        const container = document.getElementById('resultsContainer');
+        
+        // SERVER CONNECTION POINT:
+        // Replace this fake data with an actual fetch request to your Node.js backend.
+        // Example: fetch(`/api/search?category=${currentCat}&budget=${document.getElementById('buyBudget').value}`)
+        
+        container.innerHTML = `
+            <div class="result-card">
+                <div style="background: #e2e8f0; width: 80px; height: 60px; border-radius: 6px; display:flex; align-items:center; justify-content:center; font-size:24px;">🚗</div>
+                <div>
+                    <h4 style="color: var(--brand-dark);">Placeholder ${currentCat}</h4>
+                    <p style="color: var(--brand-accent); font-weight:700;">Under ₹${Number(document.getElementById('buyBudget').value).toLocaleString('en-IN')}</p>
+                </div>
+                <button class="btn-next" style="padding: 8px 12px; font-size: 0.8rem; margin-left: auto;">View</button>
+            </div>
+            <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:15px;">*Connect this to your SQL DB to show live inventory.</p>
+        `;
+    }
+</script>
+</body>
+</html>

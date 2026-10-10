@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Your Vehicle | Shiva Motors</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand-dark: #0f172a; --brand-accent: #ea580c; --bg-base: #f8fafc; --surface: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border-light: #e2e8f0; --success: #16a34a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); display: flex; justify-content: center; padding: 40px 20px; }
+        
+        .form-container { background: var(--surface); max-width: 600px; width: 100%; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
+        h2 { text-align: center; color: var(--brand-dark); margin-bottom: 10px; }
+        .progress-bar { display: flex; gap: 10px; margin-bottom: 30px; }
+        .progress-step { flex: 1; height: 6px; background: var(--border-light); border-radius: 10px; transition: 0.3s; }
+        .progress-step.active { background: var(--brand-accent); }
+        
+        .step { display: none; animation: fadeIn 0.4s; }
+        .step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; }
+        select, input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 1rem; }
+        
+        .btn-row { display: flex; justify-content: space-between; margin-top: 30px; }
+        button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-next { background: var(--brand-accent); color: white; margin-left: auto; }
+        .btn-next:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-back { background: var(--border-light); color: var(--text-main); }
+        
+        .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .opt-card { border: 2px solid var(--border-light); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .opt-card.selected { border-color: var(--brand-accent); background: #fff7ed; color: var(--brand-accent); }
+        
+        /* Photo Previews */
+        .file-upload-box { border: 2px dashed var(--brand-accent); padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; background: #fff7ed; margin-bottom: 15px; }
+        #previewContainer { display: flex; gap: 10px; flex-wrap: wrap; }
+        .img-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-light); }
+        .photo-count { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; display: block; }
+
+        /* Success Animation */
+        .success-screen { text-align: center; display: none; }
+        .check-circle { width: 80px; height: 80px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .check-circle svg { fill: white; width: 40px; height: 40px; }
+        @keyframes scaleIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        
+        @media (max-width: 600px) { .form-container { padding: 25px; } }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <div id="formContent">
+        <h2>Sell Your Vehicle</h2>
+        
+        <div class="progress-bar">
+            <div class="progress-step active" id="pb-1"></div>
+            <div class="progress-step" id="pb-2"></div>
+            <div class="progress-step" id="pb-3"></div>
+            <div class="progress-step" id="pb-4"></div>
+        </div>
+
+        <!-- Step 1: Category -->
+        <div class="step active" id="step-1">
+            <label>What are you selling?</label>
+            <div class="grid-options">
+                <div class="opt-card" onclick="selectCategory(this, 'Car')">Car</div>
+                <div class="opt-card" onclick="selectCategory(this, 'Bike')">Bike</div>
+                <div class="opt-card" onclick="selectCategory(this, 'Tractor')">Tractor</div>
+                <div class="opt-card" onclick="selectCategory(this, 'JCB')">JCB</div>
+                <div class="opt-card" onclick="selectCategory(this, 'Commercial')">Commercial</div>
+            </div>
+            <input type="hidden" id="sellCategory" value="">
+            <div class="btn-row"><button class="btn-next" onclick="nextStep(1)">Next Step</button></div>
+        </div>
+
+        <!-- Step 2: Condition -->
+        <div class="step" id="step-2">
+            <div class="form-group">
+                <label>Overall Condition</label>
+                <select id="sellCondition">
+                    <option value="">Select condition...</option>
+                    <option value="Excellent">Excellent (Like New)</option>
+                    <option value="Good">Good (Minor wear)</option>
+                    <option value="Average">Average (Visible wear)</option>
+                    <option value="Needs repair">Needs Repair</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Additional Details (Optional)</label>
+                <textarea id="sellDetails" rows="4" placeholder="Mention mileage, service history, etc."></textarea>
+            </div>
+            <div class="btn-row">
+                <button class="btn-back" onclick="prevStep(2)">Back</button>
+                <button class="btn-next" onclick="nextStep(2)">Next Step</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Photos -->
+        <div class="step" id="step-3">
+            <label>Upload Vehicle Photos</label>
+            <span class="photo-count" id="photoStatus">Minimum 5 photos required (Front, Back, Sides, Interior). Currently: 0</span>
+            
+            <label for="vehiclePhotos" class="file-upload-box">
+                <span style="font-size: 24px; display: block; margin-bottom: 5px;">📸</span>
+                <strong style="color: var(--brand-accent);">Click to select images</strong>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">(JPEG, PNG only)</p>
+            </label>
+            <input type="file" id="vehiclePhotos" multiple accept="image/*" style="display: none;" onchange="handleFiles(this)">
+            
+            <div id="previewContainer"></div>
+
+            <div class="btn-row">
+                <button class="btn-back" onclick="prevStep(3)">Back</button>
+                <button class="btn-next" id="btnNextPhoto" disabled onclick="nextStep(3)">Next Step</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Price -->
+        <div class="step" id="step-4">
+            <div class="form-group">
+                <label>Expected Price (₹)</label>
+                <input type="number" id="sellPrice" min="1" placeholder="e.g. 250000">
+            </div>
+            <div class="btn-row">
+                <button class="btn-back" onclick="prevStep(4)">Back</button>
+                <button class="btn-next" onclick="submitForm()">Submit Vehicle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div class="success-screen" id="successScreen">
+        <div class="check-circle">
+            <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+        </div>
+        <h2 style="color: var(--success);">All details submitted successfully!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">We will contact you shortly for further assistance and inspection.</p>
+        <a href="/"><button class="btn-back" style="width: 100%;">Return to Home</button></a>
+    </div>
+</div>
+
+<script>
+    function selectCategory(element, cat) {
+        document.querySelectorAll('.opt-card').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        document.getElementById('sellCategory').value = cat;
+    }
+
+    function nextStep(current) {
+        if(current === 1 && !document.getElementById('sellCategory').value) return alert("Select a category.");
+        if(current === 2 && !document.getElementById('sellCondition').value) return alert("Select the condition.");
+
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`step-${current + 1}`).classList.add('active');
+        document.getElementById(`pb-${current + 1}`).classList.add('active');
+    }
+
+    function prevStep(current) {
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`step-${current - 1}`).classList.add('active');
+        document.getElementById(`pb-${current}`).classList.remove('active');
+    }
+
+    // Photo Handling & Validation
+    let uploadedFiles = [];
+    function handleFiles(input) {
+        const files = Array.from(input.files);
+        uploadedFiles = uploadedFiles.concat(files);
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const container = document.getElementById('previewContainer');
+        const status = document.getElementById('photoStatus');
+        const nextBtn = document.getElementById('btnNextPhoto');
+        
+        container.innerHTML = '';
+        uploadedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-preview';
+                img.onclick = () => removeFile(index); // Click to remove
+                img.title = "Click to remove";
+                container.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        status.innerText = `Minimum 5 photos required. Currently: ${uploadedFiles.length}`;
+        
+        // Enforce Minimum 5 photos
+        if(uploadedFiles.length >= 5) {
+            nextBtn.disabled = false;
+            status.style.color = "var(--success)";
+        } else {
+            nextBtn.disabled = true;
+            status.style.color = "var(--text-muted)";
+        }
+    }
+
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        updatePreview();
+    }
+
+    function submitForm() {
+        const price = document.getElementById('sellPrice').value;
+        if(!price || Number(price) <= 0) return alert("Enter a valid expected price.");
+
+        // SERVER CONNECTION POINT:
+        // Use FormData to send text data and uploadedFiles array to your Express backend.
+        // const formData = new FormData();
+        // formData.append('price', price);
+        // uploadedFiles.forEach(file => formData.append('photos', file));
+        // fetch('/api/sell-vehicle', { method: 'POST', body: formData }).then(...)
+
+        // Trigger Success Animation
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+    }
+</script>
+</body>
+</html>

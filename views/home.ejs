@@ -59,6 +59,14 @@
         .search-wrapper button { background: var(--brand-accent); color: white; border: none; padding: 0 36px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition-smooth); }
         .search-wrapper button:hover { background: var(--brand-accent-hover); }
 
+        /* Hero Action Buttons */
+        .hero-actions { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+        .btn-hero { padding: 14px 32px; border-radius: 8px; font-size: 1.05rem; font-weight: 700; transition: var(--transition-smooth); text-align: center; flex: 1; max-width: 200px; text-decoration: none; }
+        .btn-buy { background: var(--brand-dark); color: var(--surface); border: 2px solid var(--brand-dark); }
+        .btn-buy:hover { background: transparent; color: var(--brand-dark); }
+        .btn-sell { background: var(--brand-accent); color: var(--surface); border: 2px solid var(--brand-accent); }
+        .btn-sell:hover { background: transparent; color: var(--brand-accent); }
+
         .photo-slider-wrapper { background: var(--surface); padding: 24px 0 34px; overflow: hidden; border-bottom: 1px solid var(--border-light); position: relative; }
         .photo-track { display: flex; width: max-content; gap: 20px; animation: slidePhotos 35s linear infinite; }
         .photo-track:hover { animation-play-state: paused; }
@@ -134,10 +142,12 @@
             .location-tag { font-size: 0.8rem; padding: 4px 8px; flex: 1; justify-content: flex-start; }
             .btn-admin { padding: 6px 14px; font-size: 0.8rem; }
             
-            /* Hero Typography */
+            /* Hero Typography & Buttons */
             .hero { padding: 30px 15px 20px; }
             .hero h1 { font-size: 2.1rem; }
             .hero p { font-size: 0.95rem; }
+            .hero-actions { flex-direction: column; gap: 15px; margin-top: 20px; align-items: center; }
+            .btn-hero { max-width: 100%; width: 100%; }
 
             /* Expand Search Bar */
             .search-wrapper { flex-direction: column; border-radius: 12px; }
@@ -206,6 +216,12 @@
             <input type="text" name="search" placeholder="Search models, brands, or vehicle types..." value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
             <button type="submit">Search</button>
         </form>
+
+        <!-- NEW ACTION BUTTONS -->
+        <div class="hero-actions">
+            <a href="/buy" class="btn-hero btn-buy">Buy a Vehicle</a>
+            <a href="/sell" class="btn-hero btn-sell">Sell a Vehicle</a>
+        </div>
     </header>
 
     <section class="photo-slider-wrapper">
@@ -291,7 +307,7 @@
                 <ul class="footer-links">
                     <li style="line-height: 1.5; margin-bottom: 12px;">📍 Infront of District Forest Department, District Civil Court Rd, NH139, Bishunpur, Garhwa, Jharkhand 822114</li>
                     <li style="margin-bottom: 10px;">📞 +91 9471753577, +91 9471119766</li>
-                    <li>✉️️ official@shivamotor.in</li>
+                    <li>✉ official@shivamotor.in</li>
                 </ul>
             </div>
         </div>
